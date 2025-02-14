@@ -1,13 +1,13 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div class="flex flex-col bg-gray-50 transition-all duration-300"
-    :class="{ 'w-1/6': !isCollapsed, 'w-16': isCollapsed }">
+  <div class="flex flex-col bg-[#f9f9f9] transition-all duration-300"
+    :class="{ 'w-1/6': !isCollapsed, 'w-0': isCollapsed }">
     <!-- Header với nút Collapse, Search, Create Chat -->
     <div class="p-3 flex items-center justify-between shadow-sm">
       <!-- Nút Collapse (Bên trái) -->
       <button ref="tooltipCollapse" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
         @click="toggleSidebar">
-        <font-awesome-icon :icon="['fas', isCollapsed ? 'chevron-right' : 'bars']" class="text-gray-600 w-4 h-4" />
+        <font-awesome-icon :icon="['fas', 'bars']" :class="!isCollapsed ? 'text-gray-600 w-4 h-4' : 'invisible'" />
       </button>
 
       <!-- Nút Search + Create Chat (Bên phải) -->
@@ -23,7 +23,7 @@
     </div>
 
     <!-- Danh sách Chat -->
-    <div v-if="!isCollapsed" class="flex-1 overflow-y-auto h-full px-2 pb-2 space-y-2">
+    <div v-if="!isCollapsed" class="flex-1 overflow-y-auto p-2 space-y-2">
       <!-- ChatGPT -->
       <button class="w-full justify-start px-2 mt-4 text-sm flex items-center space-x-3 truncate"
         :class="{ 'justify-center': isCollapsed }">
@@ -213,88 +213,105 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { dataFake } from "@/components/fakeData";
-export default {
-  data() {
-    return {
-      openDropdown: null,
-      selectedIndex: null,
-      isCollapsed: false,
-      dataFake,
-    };
-  },
-  methods: {
-    toggleDropdown(index) {
-      console.log("Click More button at index:", index);
-      this.openDropdown = this.openDropdown === index ? null : index;
-    },
-    closeDropdown() {
-      this.openDropdown = null;
-    },
-    selectItem(index) {
-      this.selectedIndex = index;
-      console.log("Selected history item:", index);
-      // Emit event "selectHistory" kèm theo messages của history được chọn
-      this.$emit("selectHistory", this.dataFake[index].messages);
-    },
-    shareItem(index) {
-      alert(`Chia sẻ mục ${index + 1}`);
-      this.closeDropdown();
-    },
-    renameItem(index) {
-      alert(`Đổi tên mục ${index + 1}`);
-      this.closeDropdown();
-    },
-    archiveItem(index) {
-      alert(`Lưu trữ mục ${index + 1}`);
-      this.closeDropdown();
-    },
-    deleteItem(index) {
-      alert(`Xóa mục ${index + 1}`);
-      this.closeDropdown();
-    },
-    toggleSidebar() {
-      this.isCollapsed = !this.isCollapsed;
-    },
-  },
-  mounted() {
-    document.addEventListener("click", this.closeDropdown);
+import {
+  ref,
+  defineEmits,
+  onMounted,
+  onBeforeMount,
+  inject
+} from "vue";
 
-    tippy(this.$refs.tooltipCollapse, {
-      content: "Thu gọn / Mở rộng Sidebar",
-      placement: "right",
+const emit = defineEmits(["selectHistory", "toggleSidebar"]);
+
+const isCollapsed = inject("isCollapsed");
+
+const openDropdown = ref(null);
+const selectedIndex = ref(null);
+const tooltipCollapse = ref(null);
+const tooltipSearch = ref(null);
+const tooltipCreateChat = ref(null);
+const tooltipNewProject = ref(null);
+const tooltipAddColleague = ref(null);
+
+const toggleDropdown = (index) => {
+  console.log("Click More button at index:", index);
+  openDropdown.value = openDropdown.value === index ? null : index;
+}
+
+const closeDropdown = () => {
+  openDropdown.value = null;
+}
+
+const selectItem = (index) => {
+  selectedIndex.value = index;
+  console.log("Selected history item:", index);
+  // Emit event "selectHistory" kèm theo messages của history được chọn
+  emit("selectHistory", dataFake[index].messages);
+}
+
+const shareItem = (index) => {
+  alert(`Chia sẻ mục ${index + 1}`);
+  closeDropdown();
+}
+
+const renameItem = (index) => {
+  alert(`Đổi tên mục ${index + 1}`);
+  closeDropdown();
+}
+
+const archiveItem = (index) => {
+  alert(`Lưu trữ mục ${index + 1}`);
+  closeDropdown();
+}
+
+const deleteItem = (index) => {
+  alert(`Xóa mục ${index + 1}`);
+  closeDropdown();
+}
+
+const toggleSidebar = () => {
+  emit("toggleSidebar");
+}
+
+onMounted(() => {
+  document.addEventListener("click", closeDropdown());
+
+  tippy(tooltipCollapse.value, {
+    content: "Thu gọn / Mở rộng Sidebar",
+    placement: "right",
+  });
+
+  if (tooltipSearch.value) {
+    tippy(tooltipSearch.value, {
+      content: "Tìm kiếm",
+      placement: "bottom",
     });
-
-    if (this.$refs.tooltipSearch) {
-      tippy(this.$refs.tooltipSearch, {
-        content: "Tìm kiếm",
-        placement: "bottom",
-      });
-    }
-    if (this.$refs.tooltipCreateChat) {
-      tippy(this.$refs.tooltipCreateChat, {
-        content: "Tạo cuộc trò chuyện",
-        placement: "bottom",
-      });
-    }
-
-    tippy(this.$refs.tooltipNewProject, {
-      content: "Tạo dự án mới",
-      placement: "right",
+  }
+  if (tooltipCreateChat.value) {
+    tippy(tooltipCreateChat.value, {
+      content: "Tạo cuộc trò chuyện",
+      placement: "bottom",
     });
+  }
 
-    tippy(this.$refs.tooltipAddColleague, {
-      content: "Thêm đồng nghiệp",
-      placement: "right",
-    });
-  },
-  beforeUnmount() {
-    document.removeEventListener("click", this.closeDropdown);
-  },
-};
+  tippy(tooltipNewProject.value, {
+    content: "Tạo dự án mới",
+    placement: "right",
+  });
+
+  tippy(tooltipAddColleague.value, {
+    content: "Thêm đồng nghiệp",
+    placement: "right",
+  });
+});
+
+onBeforeMount(() => {
+  document.removeEventListener("click", closeDropdown());
+});
 </script>
 
 <style scoped>

@@ -1,14 +1,14 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-4">
     <div
-      v-for="(message, index) in messages"
+      v-for="(message, index) in props.messages"
       :key="index"
       :class="{
         'flex flex-col items-end': message.sender === 'user',
         'flex flex-col items-start': message.sender === 'bot'
       }"
     >
-      <div :class="message.sender === 'user' ? 'bg-gray-100 max-w-xs' : ''" class="p-4 rounded-lg">
+      <div :class="message.sender === 'user' ? 'bg-gray-100 max-w-xs py-2.5 px-5' : ''" class="p-4 rounded-3xl">
         <p class="text-base">{{ message.text }}</p>
       </div>
       <!-- Chỉ hiển thị icon nếu đây là tin nhắn của bot và là tin nhắn bot cuối cùng -->
@@ -27,27 +27,27 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "ChatDisplay",
-  props: {
-    messages: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  computed: {
-    lastBotMessageIndex() {
-      let lastIndex = -1;
-      this.messages.forEach((msg, index) => {
-        if (msg.sender === 'bot') {
-          lastIndex = index;
-        }
-      });
-      return lastIndex;
-    },
-  },
-};
+<script setup>
+import { defineProps, computed } from "vue";
+
+const props = defineProps({
+  messages: {
+    type: Array,
+    default: () => []
+  }
+});
+
+const lastBotMessageIndex = computed(() => {
+  let lastIndex = -1;
+  props.messages.forEach((msg, index) => {
+    if (msg.sender === 'bot') {
+      lastIndex = index;
+    }
+  });
+
+  return lastIndex
+});
+
 </script>
 
 <style scoped></style>

@@ -2,10 +2,22 @@
   <header class="h-14 shadow-sm flex items-center px-4 justify-between relative">
     <!-- Dropdown chọn model (bên trái) -->
     <div class="flex items-center gap-2 relative">
+      <div v-if="isCollapsed" class="flex items-center">
+        <!-- Nút Collapse (Bên trái) -->
+        <button ref="tooltipCollapse" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
+          @click="toggleSidebar">
+          <font-awesome-icon :icon="['fas', 'bars']" class="text-gray-600 w-4 h-4" />
+        </button>
+        <button ref="tooltipSearch" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
+          <font-awesome-icon :icon="['fas', 'pen-to-square']" class="text-gray-600 w-4 h-4" />
+        </button>
+      </div>
       <div class="cursor-pointer flex items-center gap-1 dropdown-container" @click="toggleModelDropdown">
         <span class="text-gray-600 mr-2">{{ selectedModel.title }}</span>
         <font-awesome-icon :icon="['fas', 'chevron-down']" class="w-3 h-3 text-gray-600" />
       </div>
+
+      
       <!-- Danh sách model dropdown -->
       <div v-if="showModelDropdown"
         class="absolute top-full left-0 mt-1 bg-white border rounded-2xl shadow-md z-10 w-80 px-2 py-1">
@@ -120,98 +132,83 @@
   </header>
 </template>
 
-<script>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+<script setup>
+import { ref, onMounted, onBeforeUnmount, inject } from "vue";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-export default {
-  name: "HeaderBar",
-  components: {
-    FontAwesomeIcon,
+const isCollapsed = inject("isCollapsed");
+
+// Dropdown model
+const showModelDropdown = ref(false);
+const models = ref([
+  {
+    title: "GPT-4o",
+    description: "Hữu ích cho hầu hết câu hỏi",
   },
-  setup() {
-    // Dropdown model
-    const showModelDropdown = ref(false);
-    const models = ref([
-      {
-        title: "GPT-4o",
-        description: "Hữu ích cho hầu hết câu hỏi",
-      },
-      {
-        title: "GPT-4o với nhiệm vụ theo lịch",
-        description: "Yêu cầu ChatGPT theo dõi lại sau",
-      },
-      {
-        title: "ChatGPT o1",
-        description: "Sử dụng khả năng suy luận nâng cao",
-      },
-      {
-        title: "ChatGPT o3-mini",
-        description: "Suy luận nâng cao nhanh chóng",
-      },
-      {
-        title: "ChatGPT o3-mini-high",
-        description: "Hữu ích khi viết code và logic\nNhiều mô hình hơn",
-      },
-    ]);
-    const selectedModel = ref(models.value[4]);
-    const isChatTemporary = ref(false);
-    const toggleModelDropdown = (event) => {
-      showModelDropdown.value = !showModelDropdown.value;
-      event.stopPropagation();
-    };
-    const selectModel = (model) => {
-      selectedModel.value = model;
-      showModelDropdown.value = false;
-    };
-
-    const shareButton = ref(null);
-    const showProfileDropdown = ref(false);
-    const profileContainer = ref(null);
-    const toggleProfileDropdown = () => {
-      showProfileDropdown.value = !showProfileDropdown.value;
-    };
-
-    // click ngoài để đóng các dropdown
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(".dropdown-container")) {
-        showModelDropdown.value = false;
-      }
-      if (profileContainer.value && !profileContainer.value.contains(event.target)) {
-        showProfileDropdown.value = false;
-      }
-    };
-
-    onMounted(() => {
-      document.addEventListener("click", handleClickOutside);
-      if (shareButton.value) {
-        tippy(shareButton.value, {
-          content: "Chia sẻ",
-          placement: "top",
-        });
-      }
-    });
-
-    onBeforeUnmount(() => {
-      document.removeEventListener("click", handleClickOutside);
-    });
-
-    return {
-      showModelDropdown,
-      models,
-      selectedModel,
-      isChatTemporary,
-      toggleModelDropdown,
-      selectModel,
-      shareButton,
-      showProfileDropdown,
-      profileContainer,
-      toggleProfileDropdown,
-    };
+  {
+    title: "GPT-4o với nhiệm vụ theo lịch",
+    description: "Yêu cầu ChatGPT theo dõi lại sau",
   },
+  {
+    title: "ChatGPT o1",
+    description: "Sử dụng khả năng suy luận nâng cao",
+  },
+  {
+    title: "ChatGPT o3-mini",
+    description: "Suy luận nâng cao nhanh chóng",
+  },
+  {
+    title: "ChatGPT o3-mini-high",
+    description: "Hữu ích khi viết code và logic\nNhiều mô hình hơn",
+  },
+]);
+const selectedModel = ref(models.value[4]);
+const isChatTemporary = ref(false);
+const toggleModelDropdown = (event) => {
+  showModelDropdown.value = !showModelDropdown.value;
+  event.stopPropagation();
 };
+const selectModel = (model) => {
+  selectedModel.value = model;
+  showModelDropdown.value = false;
+};
+
+const shareButton = ref(null);
+const showProfileDropdown = ref(false);
+const profileContainer = ref(null);
+const toggleProfileDropdown = () => {
+  showProfileDropdown.value = !showProfileDropdown.value;
+};
+
+// click ngoài để đóng các dropdown
+const handleClickOutside = (event) => {
+  if (!event.target.closest(".dropdown-container")) {
+    showModelDropdown.value = false;
+  }
+  if (profileContainer.value && !profileContainer.value.contains(event.target)) {
+    showProfileDropdown.value = false;
+  }
+};
+
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value;
+}
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+  if (shareButton.value) {
+    tippy(shareButton.value, {
+      content: "Chia sẻ",
+      placement: "top",
+    });
+  }
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 </script>
 
 <style scoped>

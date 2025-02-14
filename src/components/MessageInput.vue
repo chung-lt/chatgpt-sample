@@ -54,66 +54,51 @@
   </div>
 </template>
 
-<script>
-import { onMounted, ref } from "vue";
+<script setup>
+import { onMounted, ref, defineEmits } from "vue";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
+const message = ref("");
+const tooltipPlus = ref(null);
+const tooltipGlobe = ref(null);
+const tooltipEllipsis = ref(null);
+const tooltipSend = ref(null);
 
-export default {
-  name: "MessageInput",
-  emits: ["send"],
-  setup(_, { emit }) {
-    const message = ref("");
+const emit = defineEmits(["send"]);
 
-    const tooltipPlus = ref(null);
-    const tooltipGlobe = ref(null);
-    const tooltipEllipsis = ref(null);
-    const tooltipSend = ref(null);
-
-    const sendMessage = () => {
-      if (message.value.trim() !== "") {
-        emit("send", message.value);
-        message.value = "";
-      }
-    };
-
-    const handleKeydown = (event) => {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
-    };
-
-    onMounted(() => {
-      tippy(tooltipPlus.value, {
-        content: "Thêm",
-        placement: "top",
-      });
-      tippy(tooltipGlobe.value, {
-        content: "Tìm kiếm trên web",
-        placement: "top",
-      });
-      tippy(tooltipEllipsis.value, {
-        content: "Tùy chọn thêm",
-        placement: "top",
-      });
-      tippy(tooltipSend.value, {
-        content: "Gửi tin nhắn",
-        placement: "top",
-      });
-    });
-
-    return {
-      message,
-      tooltipPlus,
-      tooltipGlobe,
-      tooltipEllipsis,
-      tooltipSend,
-      sendMessage,
-      handleKeydown,
-    };
-  },
+const sendMessage = () => {
+  if (message.value.trim() !== "") {
+    emit("send", message.value);
+    message.value = "";
+  }
 };
+
+const handleKeydown = (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+};
+
+onMounted(() => {
+  tippy(tooltipPlus.value, {
+    content: "Thêm",
+    placement: "top",
+  });
+  tippy(tooltipGlobe.value, {
+    content: "Tìm kiếm trên web",
+    placement: "top",
+  });
+  tippy(tooltipEllipsis.value, {
+    content: "Tùy chọn thêm",
+    placement: "top",
+  });
+  tippy(tooltipSend.value, {
+    content: "Gửi tin nhắn",
+    placement: "top",
+  });
+});
+
 </script>
 
 <style scoped>
