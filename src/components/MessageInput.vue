@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, defineEmits } from "vue";
+import { onMounted, ref } from "vue";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 const message = ref("");

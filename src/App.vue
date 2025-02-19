@@ -1,33 +1,40 @@
 <!-- App.vue -->
 <template>
-  <div class="h-screen bg-white flex">
-    <Sidebar @selectHistory="handleSelectHistory" @toggleSidebar="handleToggleSidebar"/>
-    <div class="flex-1 flex flex-col">
-      <HeaderBar />
-      <div v-if="messages.length > 0" class="flex-1 p-4 overflow-y-auto">
-        <ChatDisplay :messages="messages" />
-      </div>
-      <div
-        class="p-4 transition-all flex flex-col gap-2"
-        :class="{'flex-1 flex item-center justify-center flex-col': messages.length === 0 }"
-      >
-        <div class="text-center">Tôi có thể giúp gì cho bạn?</div>
-        <MessageInput class="w-full" @send="handleSendMessage" />
+  <template>
+    <div class="h-screen bg-white flex">
+      <Sidebar @selectHistory="handleSelectHistory" @toggleSidebar="handleToggleSidebar"/>
+      <div class="flex-1 flex flex-col">
+        <HeaderBar />
+        <div v-if="messages.length > 0" class="flex-1 p-4 overflow-y-auto">
+          <ChatDisplay :messages="messages" />
+        </div>
+        <div
+          class="p-4 transition-all flex flex-col gap-2"
+          :class="{'flex-1 flex item-center justify-center flex-col': messages.length === 0 }"
+        >
+          <div :class="messages.length === 0 ? 'text-center text-3xl font-semibold leading-9' : 'invisible'">Tôi có thể giúp gì cho bạn?</div>
+          <div class="p4">
+            <MessageInput class="w-full" @send="handleSendMessage" />
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </template>
 </template>
 
 <script setup>
 import { ref, provide } from "vue";
-import Sidebar from "./components/Sidebar.vue";
-import HeaderBar from "./components/HeaderBar.vue";
+// import { useRoute } from 'vue-router';
+  
+import Sidebar from "./layout/Sidebar.vue";
+import HeaderBar from "./layout/HeaderBar.vue";
 import ChatDisplay from "./components/ChatDisplay.vue";
 import MessageInput from "./components/MessageInput.vue";
 
 const messages = ref([]);
 const isCollapsed = ref(false);
 provide("isCollapsed", isCollapsed);
+// const route = useRoute();
 
 const botMessages = [
   "Xin chào! Rất vui được gặp bạn hôm nay. Mình rất mong muốn hỗ trợ bạn. Bạn cần tìm kiếm thông tin hay yêu cầu hỗ trợ gì đặc biệt không?",

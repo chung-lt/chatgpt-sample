@@ -1,0 +1,330 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<template>
+  <div class="flex flex-col bg-[#f9f9f9] transition-all duration-300"
+    :class="{ 'w-1/6': !isCollapsed, 'w-0': isCollapsed }">
+    <!-- Header với nút Collapse, Search, Create Chat -->
+    <div class="p-3 flex items-center justify-between shadow-sm">
+      <!-- Nút Collapse (Bên trái) -->
+      <button ref="tooltipCollapse" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
+        @click="toggleSidebar">
+        <font-awesome-icon :icon="['fas', 'bars']" :class="!isCollapsed ? 'text-gray-600 w-4 h-4' : 'invisible'" />
+      </button>
+
+      <!-- Nút Search + Create Chat (Bên phải) -->
+      <div v-if="!isCollapsed" class="flex items-center">
+        <button ref="tooltipSearch" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
+          <font-awesome-icon :icon="['fas', 'magnifying-glass']" class="text-gray-600 w-4 h-4" />
+        </button>
+
+        <button ref="tooltipCreateChat" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
+          <font-awesome-icon :icon="['fas', 'pen-to-square']" class="text-gray-600 w-4 h-4" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Danh sách Chat -->
+    <div v-if="!isCollapsed" class="flex-1 overflow-y-auto p-2 space-y-2">
+      <!-- ChatGPT -->
+      <button class="w-full justify-start px-2 mt-4 text-sm flex items-center space-x-3 truncate"
+        :class="{ 'justify-center': isCollapsed }">
+        <div class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 overflow-hidden">
+          <img src="/images/chatgpt.png" alt="ChatGPT" class="w-full h-full object-cover" />
+        </div>
+        <span>ChatGPT</span>
+      </button>
+
+      <!-- SORA -->
+      <button class="w-full justify-start px-2 text-sm flex items-center space-x-3 truncate"
+        :class="{ 'justify-center': isCollapsed }">
+        <div class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 overflow-hidden">
+          <img src="/images/sora.png" alt="SORA" class="w-full h-full object-cover" />
+        </div>
+        <span>SORA</span>
+      </button>
+
+      <!-- Khám phá GPT -->
+      <button class="w-full justify-start px-2 text-sm flex items-center space-x-3 truncate"
+        :class="{ 'justify-center': isCollapsed }">
+        <div class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200">
+          <font-awesome-icon :icon="['fas', 'registered']" class="text-gray-400 w-4 h-4" />
+        </div>
+        <span>Khám phá GPT</span>
+      </button>
+
+      <!-- Dự án -->
+      <div class="pt-4 pb-2 px-2 text-xs font-medium">Dự án</div>
+      <button ref="tooltipNewProject"
+        class="w-full justify-start text-sm px-2 py-1 rounded flex items-center space-x-2 hover:bg-gray-100 truncate">
+        <font-awesome-icon :icon="['fas', 'folder-open']" class="text-gray-600 w-4 h-4" />
+        <span>Dự án mới</span>
+      </button>
+
+      <!-- Hôm nay -->
+      <div class="pt-4 pb-2 px-2 text-xs font-medium sticky top-0 bg-gray-50 z-10 px-2 py-2">Hôm nay</div>
+      <div class="space-y-1">
+        <div v-for="(item, index) in 30" :key="'today-' + index" class="relative">
+          <button class="w-full justify-between text-sm px-2 py-2 flex items-center truncate rounded-lg group" :class="{
+            'bg-gray-300': selectedIndex === index,
+            'hover:bg-gray-100': selectedIndex !== index
+          }" @click="selectItem(index)">
+            <span class="truncate ml-4">Chat History Item {{ index + 1 }}</span>
+            <div @click.stop="toggleDropdown(index)"
+              class="w-4 h-4 flex items-center justify-center hidden group-hover:flex">
+              <font-awesome-icon :icon="['fas', 'ellipsis']" class="text-gray-400 w-4 h-4" />
+            </div>
+          </button>
+
+          <!-- Dropdown -->
+          <div v-if="openDropdown === index" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-lg z-10"
+            @click.stop>
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="shareItem(index)">
+              <font-awesome-icon :icon="['fas', 'share']" class="text-gray-500 w-3 h-3" />
+              <span>Chia sẻ</span>
+            </button>
+
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="renameItem(index)">
+              <font-awesome-icon :icon="['fas', 'pen']" class="text-gray-500 w-3 h-3" />
+              <span>Đổi tên</span>
+            </button>
+
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="archiveItem(index)">
+              <font-awesome-icon :icon="['fas', 'box-archive']" class="text-gray-500 w-3 h-3" />
+              <span>Lưu trữ</span>
+            </button>
+
+            <button
+              class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-red-100 text-sm text-red-500"
+              @click="deleteItem(index)">
+              <font-awesome-icon :icon="['fas', 'trash']" class="text-red-500 w-3 h-3" />
+              <span>Xóa</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7 ngày trước đó -->
+      <div class="pt-4 pb-2 px-2 text-xs font-medium sticky top-0 bg-gray-50 z-10 px-2 py-2">7 ngày trước đó</div>
+      <div class="space-y-1">
+        <div v-for="(item, index) in 30" :key="'today-' + index" class="relative">
+          <button class="w-full justify-between text-sm px-2 py-2 flex items-center truncate rounded-lg group" :class="{
+            'bg-gray-300': selectedIndex === index,
+            'hover:bg-gray-100': selectedIndex !== index
+          }" @click="selectItem(index)">
+            <span class="truncate ml-4">Chat History Item {{ index + 1 }}</span>
+            <div @click.stop="toggleDropdown(index)"
+              class="w-4 h-4 flex items-center justify-center hidden group-hover:flex">
+              <font-awesome-icon :icon="['fas', 'ellipsis']" class="text-gray-400 w-4 h-4" />
+            </div>
+          </button>
+
+          <!-- Dropdown -->
+          <div v-if="openDropdown === index" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-lg z-10"
+            @click.stop>
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="shareItem(index)">
+              <font-awesome-icon :icon="['fas', 'share']" class="text-gray-500 w-3 h-3" />
+              <span>Chia sẻ</span>
+            </button>
+
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="renameItem(index)">
+              <font-awesome-icon :icon="['fas', 'pen']" class="text-gray-500 w-3 h-3" />
+              <span>Đổi tên</span>
+            </button>
+
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="archiveItem(index)">
+              <font-awesome-icon :icon="['fas', 'box-archive']" class="text-gray-500 w-3 h-3" />
+              <span>Lưu trữ</span>
+            </button>
+
+            <button
+              class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-red-100 text-sm text-red-500"
+              @click="deleteItem(index)">
+              <font-awesome-icon :icon="['fas', 'trash']" class="text-red-500 w-3 h-3" />
+              <span>Xóa</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 30 ngày trước đó -->
+      <div class="pt-4 pb-2 px-2 text-xs font-medium sticky top-0 bg-gray-50 z-10 px-2 py-2">30 ngày trước đó</div>
+      <div class="space-y-1">
+        <div v-for="(item, index) in 30" :key="'today-' + index" class="relative">
+          <button class="w-full justify-between text-sm px-2 py-2 flex items-center truncate rounded-lg group" :class="{
+            'bg-gray-300': selectedIndex === index,
+            'hover:bg-gray-100': selectedIndex !== index
+          }" @click="selectItem(index)">
+            <span class="truncate ml-4">Chat History Item {{ index + 1 }}</span>
+            <div @click.stop="toggleDropdown(index)"
+              class="w-4 h-4 flex items-center justify-center hidden group-hover:flex">
+              <font-awesome-icon :icon="['fas', 'ellipsis']" class="text-gray-400 w-4 h-4" />
+            </div>
+          </button>
+
+          <!-- Dropdown -->
+          <div v-if="openDropdown === index" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-lg z-10"
+            @click.stop>
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="shareItem(index)">
+              <font-awesome-icon :icon="['fas', 'share']" class="text-gray-500 w-3 h-3" />
+              <span>Chia sẻ</span>
+            </button>
+
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="renameItem(index)">
+              <font-awesome-icon :icon="['fas', 'pen']" class="text-gray-500 w-3 h-3" />
+              <span>Đổi tên</span>
+            </button>
+
+            <button class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-gray-100 text-sm"
+              @click="archiveItem(index)">
+              <font-awesome-icon :icon="['fas', 'box-archive']" class="text-gray-500 w-3 h-3" />
+              <span>Lưu trữ</span>
+            </button>
+
+            <button
+              class="block w-full text-left px-3 py-2 flex items-center space-x-2 hover:bg-red-100 text-sm text-red-500"
+              @click="deleteItem(index)">
+              <font-awesome-icon :icon="['fas', 'trash']" class="text-red-500 w-3 h-3" />
+              <span>Xóa</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div v-if="!isCollapsed" class="flex items-center border-t p-3">
+      <div class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 overflow-hidden">
+        <font-awesome-icon :icon="['fas', 'envelope-open']" class="text-gray-600 w-4 h-4" />
+      </div>
+      <button ref="tooltipAddColleague" class="w-full justify-start px-2 py-1 text-sm flex items-center space-x-3">
+        <div class="text-left w-full">
+          <p class="text-sm truncate">Thêm đồng nghiệp</p>
+          <p class="text-xs text-gray-400 mt-1 truncate">Mời thành viên vào không gian làm việc ABC</p>
+        </div>
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import tippy from "tippy.js";
+import "tippy.js/dist/tippy.css";
+import { dataFake } from "@/components/fakeData";
+import {
+  ref,
+  defineEmits,
+  onMounted,
+  onBeforeMount,
+  inject
+} from "vue";
+
+const emit = defineEmits(["selectHistory", "toggleSidebar"]);
+
+const isCollapsed = inject("isCollapsed");
+
+const openDropdown = ref(null);
+const selectedIndex = ref(null);
+const tooltipCollapse = ref(null);
+const tooltipSearch = ref(null);
+const tooltipCreateChat = ref(null);
+const tooltipNewProject = ref(null);
+const tooltipAddColleague = ref(null);
+
+const toggleDropdown = (index) => {
+  console.log("Click More button at index:", index);
+  openDropdown.value = openDropdown.value === index ? null : index;
+}
+
+const closeDropdown = () => {
+  openDropdown.value = null;
+}
+
+const selectItem = (index) => {
+  selectedIndex.value = index;
+  console.log("Selected history item:", index);
+  // Emit event "selectHistory" kèm theo messages của history được chọn
+  emit("selectHistory", dataFake[index].messages);
+}
+
+const shareItem = (index) => {
+  alert(`Chia sẻ mục ${index + 1}`);
+  closeDropdown();
+}
+
+const renameItem = (index) => {
+  alert(`Đổi tên mục ${index + 1}`);
+  closeDropdown();
+}
+
+const archiveItem = (index) => {
+  alert(`Lưu trữ mục ${index + 1}`);
+  closeDropdown();
+}
+
+const deleteItem = (index) => {
+  alert(`Xóa mục ${index + 1}`);
+  closeDropdown();
+}
+
+const toggleSidebar = () => {
+  emit("toggleSidebar");
+}
+
+onMounted(() => {
+  document.addEventListener("click", closeDropdown());
+
+  tippy(tooltipCollapse.value, {
+    content: "Thu gọn / Mở rộng Sidebar",
+    placement: "right",
+  });
+
+  if (tooltipSearch.value) {
+    tippy(tooltipSearch.value, {
+      content: "Tìm kiếm",
+      placement: "bottom",
+    });
+  }
+  if (tooltipCreateChat.value) {
+    tippy(tooltipCreateChat.value, {
+      content: "Tạo cuộc trò chuyện",
+      placement: "bottom",
+    });
+  }
+
+  tippy(tooltipNewProject.value, {
+    content: "Tạo dự án mới",
+    placement: "right",
+  });
+
+  tippy(tooltipAddColleague.value, {
+    content: "Thêm đồng nghiệp",
+    placement: "right",
+  });
+});
+
+onBeforeMount(() => {
+  document.removeEventListener("click", closeDropdown());
+});
+</script>
+
+<style scoped>
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+* {
+  scrollbar-color: rgba(185, 185, 185, 0.3) transparent;
+}
+</style>
